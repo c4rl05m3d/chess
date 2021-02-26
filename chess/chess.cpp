@@ -104,6 +104,7 @@ struct tile {
 };
 
 int movepiece(vector<piece>& pieces, v2 mousepos, olc::PixelGameEngine* engine, int turn) {
+    cout << "change" << endl;
     for (auto i = pieces.begin(); i != pieces.end(); i++) {
         piece p = *i;
         bool ahead = (mousepos.x < p.pos.x + 25 and mousepos.x > p.pos.x - 25 and mousepos.y < p.pos.y + 25 and mousepos.y > p.pos.y - 25) ? true : false;

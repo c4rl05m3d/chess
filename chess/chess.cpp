@@ -90,6 +90,7 @@ struct piece {
         color = c;
         pos = p;
     }
+
 };
 
 struct tile {
@@ -103,15 +104,15 @@ struct tile {
         gridpos = { line, column };
     }
 
+    tile(){}
 
     bool operator == (tile o) {
-
-        return (condition);
+        tile temp;
+        return (o == temp) ? true : false;
     }
 };
 
 int movepiece(vector<piece>& pieces, v2 mousepos, olc::PixelGameEngine* engine, int turn) {
-    cout << "change" << endl;
     for (auto i = pieces.begin(); i != pieces.end(); i++) {
         piece p = *i;
         bool ahead = (mousepos.x < p.pos.x + 25 and mousepos.x > p.pos.x - 25 and mousepos.y < p.pos.y + 25 and mousepos.y > p.pos.y - 25) ? true : false;
@@ -275,6 +276,7 @@ struct table : olc::PixelGameEngine {
                     pos = t.center;
                     break;
                     }
+                    else { pos = actual.center; }
                 }     
             }
             olc::Pixel c = (haspiece == 1) ? olc::BLACK : olc::WHITE;

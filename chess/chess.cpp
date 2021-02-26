@@ -102,6 +102,12 @@ struct tile {
         center = c2;
         gridpos = { line, column };
     }
+
+
+    bool operator == (tile o) {
+
+        return (condition);
+    }
 };
 
 int movepiece(vector<piece>& pieces, v2 mousepos, olc::PixelGameEngine* engine, int turn) {
@@ -264,6 +270,7 @@ struct table : olc::PixelGameEngine {
                 tile t = *i;
                 if (mousepos.x < t.center.x + 25 and mousepos.x > t.center.x - 25 and mousepos.y < t.center.y + 25 and mousepos.y > t.center.y - 25) {
                     vector<tile> possible = possiblemoves(tiles, haspiece, false, actual);
+                    
                     if (find(possible.begin(), possible.end(), t) != possible.end()){
                     pos = t.center;
                     break;

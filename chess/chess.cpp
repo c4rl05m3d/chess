@@ -107,7 +107,7 @@ struct tile {
     tile(){}
 
     bool operator == (tile o) {
-        return gridpos[0] = o.gridpos[0] and color.r == o.color.r;
+        return gridpos[0] == o.gridpos[0] and gridpos[1] == o.gridpos[1] and color.r == o.color.r;
 
     }
 };
@@ -163,20 +163,17 @@ void drawtable(vector<string> ltrs, vector<string> nmbs, vector<piece> pieces, o
  }
 
 bool isdiagonal(tile t1, tile t2) {
-    vector<int> sum = { -1, 1 };
-    int k1 = t2.gridpos[0] - t1.gridpos[0];
-    int k2 = t2.gridpos[1] - t1.gridpos[1];
-    if (find(sum.begin(), sum.end(), k1) != sum.end() and find(sum.begin(), sum.end(), k2) != sum.end()) {
-        return true;
-    }
-    else { return false; }
+   
+    return abs(t1.gridpos[0] - t2.gridpos[0]) == 1 and abs(t1.gridpos[1] - t2.gridpos[1]) == 1;
 }
 
-vector<tile> possiblemoves(vector<tile> tiles, int haspiece, bool dama, tile actual) {
+vector<tile> possiblemoves(vector<tile>& tiles, int haspiece, bool dama, tile actual) {
     olc::Pixel color = (haspiece == 1) ? olc::BLACK : olc::WHITE;
     vector<tile> possible;
     for (tile t : tiles) {
-        if (isdiagonal(actual, t) and t.occupied == 0) {
+        cout << "actual: " << actual.gridpos << "  t: " << t.gridpos << endl;
+        if (isdiagonal(actual, t)) {
+            cout << "diag" << endl;
             possible.push_back(t);
         }
     }
@@ -256,7 +253,7 @@ struct table : olc::PixelGameEngine {
         else { DrawString(200, 530, "White's turn", olc::WHITE, 2); }
         if (GetMouse(0).bPressed and haspiece == 0) {
             haspiece = movepiece(pieces, mousepos, this, turn);
-            tile actual = startingtile(mousepos, tiles);
+            actual = startingtile(mousepos, tiles);
         }
         if (haspiece == 1) {
             FillCircle(mousepos.x, mousepos.y, 20, olc::BLACK);
@@ -271,8 +268,13 @@ struct table : olc::PixelGameEngine {
                 tile t = *i;
                 if (mousepos.x < t.center.x + 25 and mousepos.x > t.center.x - 25 and mousepos.y < t.center.y + 25 and mousepos.y > t.center.y - 25) {
                     vector<tile> possible = possiblemoves(tiles, haspiece, false, actual);
+
+                    for (auto t : possible) {
+                        cout << t.gridpos << endl;
+                    }
                     
                     if (find(possible.begin(), possible.end(), t) != possible.end()){
+                        cout << "hey" << endl;
                     pos = t.center;
                     break;
                     }
@@ -280,7 +282,7 @@ struct table : olc::PixelGameEngine {
                 }     
             }
             olc::Pixel c = (haspiece == 1) ? olc::BLACK : olc::WHITE;
-
+            cout << pos << endl;
             pieces.push_back(piece(c, pos, false));
             haspiece = 0;
         }

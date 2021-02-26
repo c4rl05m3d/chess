@@ -98,9 +98,10 @@ struct tile {
     v2 center;
     vector<int> gridpos;
     int occupied;
-    tile(olc::Pixel c, v2 c2, int line, int column) {
+    tile(olc::Pixel c, v2 c2, int line, int column, int o) {
         color = c;
         center = c2;
+        occupied = o;
         gridpos = { line, column };
     }
 
@@ -172,7 +173,7 @@ vector<tile> possiblemoves(vector<tile>& tiles, int haspiece, bool dama, tile ac
     vector<tile> possible;
     for (tile t : tiles) {
         cout << "actual: " << actual.gridpos << "  t: " << t.gridpos << endl;
-        if (isdiagonal(actual, t)) {
+        if (isdiagonal(actual, t) and t.occupied==0) {
             cout << "diag" << endl;
             possible.push_back(t);
         }
@@ -193,9 +194,9 @@ struct table : olc::PixelGameEngine {
             for (int w = 1; w <= 4; w++) {
                 if (i % 2 == 0) {
                     FillRect(posx, posy , 50, 50, olc::CYAN);
-                    tiles.push_back(tile(olc::CYAN, { posx + 25, posy + 25 }, w*2 - 1, i));
+                    tiles.push_back(tile(olc::CYAN, { posx + 25, posy + 25 }, w*2 - 1, i,1));
                     FillRect(posx + 50, posy , 50, 50, olc::DARK_CYAN);
-                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 75, posy + 25 }, w*2, i));
+                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 75, posy + 25 }, w*2, i, 1));
                     if (i <= 3) {
                         FillCircle({ posx + 75, posy + 25 }, 20, olc::WHITE);
                         pieces.push_back(piece(olc::WHITE, { posx + 75, posy + 25 }, false));
@@ -211,7 +212,7 @@ struct table : olc::PixelGameEngine {
                         DrawString(posx + 70, posy - 20, nmbs[w*2-1], olc::WHITE, 1);
                     }
                     FillRect(posx, posy, 50, 50, olc::DARK_CYAN);
-                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 25, posy + 25 }, w*2-1, i));
+                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 25, posy + 25 }, w*2-1, i, 1));
                     if (i <= 3) {
                         FillCircle({ posx + 25, posy + 25 }, 20, olc::WHITE);
                         pieces.push_back(piece(olc::WHITE, { posx + 25, posy + 25 }, false));
@@ -221,7 +222,7 @@ struct table : olc::PixelGameEngine {
                         pieces.push_back(piece(olc::BLACK, { posx + 25, posy + 25 }, false));
                     }
                     FillRect(posx + 50, posy, 50, 50, olc::CYAN);
-                    tiles.push_back(tile(olc::CYAN, { posx + 75, posy + 25 }, w*2, i));
+                    tiles.push_back(tile(olc::CYAN, { posx + 75, posy + 25 }, w*2, i, 1));
                 }
                 if (w == 1) { DrawString(posx - 20, posy + 20, ltrs[i - 1], olc::WHITE, 1); }
                 posx += 100;
@@ -233,13 +234,13 @@ struct table : olc::PixelGameEngine {
     }
     int turn = 1;
     int haspiece = 0;
-    tile actual = tile(olc::BLACK, { 10, 10 }, 1, 1);
+    tile actual = tile(olc::BLACK, { 10, 10 }, 1, 1, 1);
     bool OnUserUpdate(float dt) {
         v2 mousepos = { GetMouseX(), GetMouseY() };
         for (auto i = pieces.begin(); i != pieces.end(); i++) {
-            piece p = *i;
+            piece& p = *i;
             for (auto w = tiles.begin(); w != tiles.end(); w++) {
-                tile t = *w;
+                tile& t = *w;
                 if (p.pos.x == t.center.x and p.pos.y == t.center.y) {
                     t.occupied = (p.color == olc::BLACK) ? 1 : 2;
                     break;

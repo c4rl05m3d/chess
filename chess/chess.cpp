@@ -107,8 +107,8 @@ struct tile {
     tile(){}
 
     bool operator == (tile o) {
-        tile temp;
-        return (o == temp) ? true : false;
+        return gridpos[0] = o.gridpos[0] and color.r == o.color.r;
+
     }
 };
 

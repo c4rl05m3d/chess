@@ -96,6 +96,7 @@ struct tile {
     olc::Pixel color;
     v2 center;
     vector<int> gridpos;
+    int occupied;
     tile(olc::Pixel c, v2 c2, int line, int column) {
         color = c;
         center = c2;
@@ -118,8 +119,13 @@ int movepiece(vector<piece>& pieces, v2 mousepos, olc::PixelGameEngine* engine, 
     return 0;
    }
 
-
-
+tile startingtile(v2 mousepos, vector<tile> tiles) {
+    for (tile t : tiles) {
+        if (mousepos.x < t.center.x + 25 and mousepos.x > t.center.x - 25 and mousepos.y < t.center.y + 25 and mousepos.y > t.center.y - 25) {
+            return t;
+        }
+    }
+}
 
 void drawtable(vector<string> ltrs, vector<string> nmbs, vector<piece> pieces, olc::PixelGameEngine* engine) {
     int posy = 100;
@@ -148,6 +154,26 @@ void drawtable(vector<string> ltrs, vector<string> nmbs, vector<piece> pieces, o
     }
  }
 
+bool isdiagonal(tile t1, tile t2) {
+    vector<int> sum = { -1, 1 };
+    int k1 = t2.gridpos[0] - t1.gridpos[0];
+    int k2 = t2.gridpos[1] - t1.gridpos[1];
+    if (find(sum.begin(), sum.end(), k1) != sum.end() and find(sum.begin(), sum.end(), k2) != sum.end()) {
+        return true;
+    }
+    else { return false; }
+}
+
+vector<tile> possiblemoves(vector<tile> tiles, int haspiece, bool dama, tile actual) {
+    olc::Pixel color = (haspiece == 1) ? olc::BLACK : olc::WHITE;
+    vector<tile> possible;
+    for (tile t : tiles) {
+        if (isdiagonal(actual, t) and t.occupied == 0) {
+            possible.push_back(t);
+        }
+    }
+    return possible;
+}
 
 struct table : olc::PixelGameEngine {
     vector<string> ltrs = { "A", "B", "C", "D", "E", "F", "G", "H" };
@@ -162,9 +188,9 @@ struct table : olc::PixelGameEngine {
             for (int w = 1; w <= 4; w++) {
                 if (i % 2 == 0) {
                     FillRect(posx, posy , 50, 50, olc::CYAN);
-                    tiles.push_back(tile(olc::CYAN, { posx + 25, posy + 25 }, ltrs[w - 1][0]-'A', nmbs[i-1][0]-'1'));
+                    tiles.push_back(tile(olc::CYAN, { posx + 25, posy + 25 }, w*2 - 1, i));
                     FillRect(posx + 50, posy , 50, 50, olc::DARK_CYAN);
-                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 75, posy + 25 }, ltrs[w][0]-'A', nmbs[i][0] - '1'));
+                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 75, posy + 25 }, w*2, i));
                     if (i <= 3) {
                         FillCircle({ posx + 75, posy + 25 }, 20, olc::WHITE);
                         pieces.push_back(piece(olc::WHITE, { posx + 75, posy + 25 }, false));
@@ -176,11 +202,11 @@ struct table : olc::PixelGameEngine {
                 }
                 else {
                     if (i == 1) {
-                        DrawString(posx + 20, posy - 20, nmbs[(2 * w) - 2], olc::WHITE, 1);
-                        DrawString(posx + 70, posy - 20, nmbs[(2*w)-1], olc::WHITE, 1);
+                        DrawString(posx + 20, posy - 20, nmbs[w*2 - 2], olc::WHITE, 1);
+                        DrawString(posx + 70, posy - 20, nmbs[w*2-1], olc::WHITE, 1);
                     }
                     FillRect(posx, posy, 50, 50, olc::DARK_CYAN);
-                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 25, posy + 25 }, ltrs[w-1][0] - 'A', nmbs[i][0] - '1'));
+                    tiles.push_back(tile(olc::DARK_CYAN, { posx + 25, posy + 25 }, w*2-1, i));
                     if (i <= 3) {
                         FillCircle({ posx + 25, posy + 25 }, 20, olc::WHITE);
                         pieces.push_back(piece(olc::WHITE, { posx + 25, posy + 25 }, false));
@@ -190,28 +216,39 @@ struct table : olc::PixelGameEngine {
                         pieces.push_back(piece(olc::BLACK, { posx + 25, posy + 25 }, false));
                     }
                     FillRect(posx + 50, posy, 50, 50, olc::CYAN);
-                    tiles.push_back(tile(olc::CYAN, { posx + 75, posy + 25 }, ltrs[w][0] - 'A', nmbs[i][0] - '1'));
+                    tiles.push_back(tile(olc::CYAN, { posx + 75, posy + 25 }, w*2, i));
                 }
                 if (w == 1) { DrawString(posx - 20, posy + 20, ltrs[i - 1], olc::WHITE, 1); }
                 posx += 100;
             }
             posy += 50;
         }
-        for (tile t : tiles) {
-            cout << t.gridpos << endl;
-        }
+
         return true;
     }
     int turn = 1;
     int haspiece = 0;
+    tile actual = tile(olc::BLACK, { 10, 10 }, 1, 1);
     bool OnUserUpdate(float dt) {
         v2 mousepos = { GetMouseX(), GetMouseY() };
+        for (auto i = pieces.begin(); i != pieces.end(); i++) {
+            piece p = *i;
+            for (auto w = tiles.begin(); w != tiles.end(); w++) {
+                tile t = *w;
+                if (p.pos.x == t.center.x and p.pos.y == t.center.y) {
+                    t.occupied = (p.color == olc::BLACK) ? 1 : 2;
+                    break;
+                }
+                else { t.occupied = 0; }
+            }
+        }
         Clear(olc::BLACK);
         drawtable(ltrs, nmbs, pieces, this);
         if (turn % 2 != 0) { DrawString(200, 530, "Black's turn", olc::WHITE, 2); }
         else { DrawString(200, 530, "White's turn", olc::WHITE, 2); }
         if (GetMouse(0).bPressed and haspiece == 0) {
             haspiece = movepiece(pieces, mousepos, this, turn);
+            tile actual = startingtile(mousepos, tiles);
         }
         if (haspiece == 1) {
             FillCircle(mousepos.x, mousepos.y, 20, olc::BLACK);
@@ -225,8 +262,11 @@ struct table : olc::PixelGameEngine {
             for (auto i = tiles.begin(); i != tiles.end(); i++) {
                 tile t = *i;
                 if (mousepos.x < t.center.x + 25 and mousepos.x > t.center.x - 25 and mousepos.y < t.center.y + 25 and mousepos.y > t.center.y - 25) {
+                    vector<tile> possible = possiblemoves(tiles, haspiece, false, actual);
+                    if (find(possible.begin(), possible.end(), t) != possible.end()){
                     pos = t.center;
                     break;
+                    }
                 }     
             }
             olc::Pixel c = (haspiece == 1) ? olc::BLACK : olc::WHITE;
